@@ -1,0 +1,50 @@
+html, body{
+    margin: 0;
+}
+
+#GOLCanvas{
+    position: relative;
+    /* width: 100vw;
+    height: 100vh; */
+    outline: 10px pink solid;
+}
+
+#ShadowCanvas1{
+    position: absolute;
+    left:0;
+}
+
+#ShadowCanvas2{
+    position: absolute;
+    left:0;
+}
+
+#ShadowCanvas3{
+    position: absolute;
+    left:0;
+}
+
+#ShadowCanvas4{
+    position: absolute;
+    left:0;
+}
+
+#ShadowCanvas5{
+    position: absolute;
+    left:0;
+}
+
+#ShadowCanvas6{
+    position: absolute;
+    left:0;
+}
+
+#ShadowCanvas7{
+    position: absolute;
+    left:0;
+}
+
+#ShadowCanvas8{
+    position: absolute;
+    left:0;
+}
