@@ -106,12 +106,12 @@ function addChunk(chunkX, chunkY){
     if(tileMatrix[chunkX * 25] === undefined){//columns
 
         addColumnsToChunk(chunkX, chunkY);
-        console.table(chunkMatrix);
+        //console.table(chunkMatrix);
 
     }else if(tileMatrix[chunkX * 25][chunkY * 25] === undefined){
 
         addRowsToChunk(chunkX, chunkY);
-        console.table(chunkMatrix);
+        //console.table(chunkMatrix);
 
     }
 
@@ -165,14 +165,12 @@ function addColumnsToChunk(chunkX, chunkY){
 
 function checkIfChunksNeedAdding(visibleChunksX, visibleChunksY){
 
-    console.log(visibleChunksX);
-    console.log(visibleChunksY);
 
     for(let x = 0; x < visibleChunksX; x++){
         for(let y = 0; y < visibleChunksY; y++){
             if(chunkMatrix[x] === undefined || chunkMatrix[x][y] === undefined){
             
-                console.log( x + " " + y);
+                //console.log( x + " " + y);
                 addChunk(x,y);
 
             }
@@ -183,8 +181,8 @@ function checkIfChunksNeedAdding(visibleChunksX, visibleChunksY){
 
 function drawChunk(chunkX, chunkY){
 
-    const startingTileX = chunkX * 25;
-    const startingTileY = chunkY * 25;
+    const startingTileX = chunkX * chunkSize;
+    const startingTileY = chunkY * chunkSize;
 
     for(let x = startingTileX; x < startingTileX + chunkSize; x++){ //column
         for(let y = startingTileY; y < startingTileY + chunkSize; y++){ //row
@@ -192,15 +190,17 @@ function drawChunk(chunkX, chunkY){
             ctx.beginPath();
 
             if(tileMatrix[x][y]){
+
                 ctx.fillStyle = "white";
                 drawShadow(x, y, "white");
             }else{
                 ctx.fillStyle = "darkblue";
                 drawShadow(x, y, "black");
             }
-            
-            ctx.fillRect(tileWidth * x, tileWidth * y, tileWidth, tileWidth);
+
             ctx.stroke();
+            ctx.fillRect(tileWidth * x, tileWidth * y, tileWidth, tileWidth);
+            
 
         }
     }
@@ -211,6 +211,7 @@ function drawChunk(chunkX, chunkY){
 function drawTiles(){
 
     console.log("draw tiles");
+    //console.log(tileMatrix);
 
     // offset = [100,100];
 
@@ -223,7 +224,7 @@ function drawTiles(){
     let visibleChunksX = Math.ceil(ctx.canvas.width / (tileWidth * chunkSize));
     let visibleChunksY = Math.ceil(ctx.canvas.height / (tileWidth * chunkSize));
 
-    //checkIfChunksNeedAdding(visibleChunksX, visibleChunksY);
+    checkIfChunksNeedAdding(visibleChunksX, visibleChunksY);
 
     //which chunks need loading
 
@@ -234,10 +235,13 @@ function drawTiles(){
 
     if(offset[0] != 0){
         startingChunkX = 1 / (Math.ceil((offset[0] / tileWidth) / chunkSize));
+        console.log(startingChunkX);
     }
 
     if(offset[1] != 0){
         startingChunkY = 1 / (Math.ceil((offset[1] / tileWidth) / chunkSize));
+        console.log(startingChunkY);
+
     }
 
 
@@ -258,28 +262,17 @@ function drawTiles(){
 
 
     //load chunks
-    console.log(visibleChunksX);
-    console.log(visibleChunksY);
-
-    console.log(startingChunkX);
-    console.log(startingChunkY);
-
 
     endChunkX = visibleChunksX + startingChunkX;
     endChunkY = visibleChunksY + startingChunkY;
 
-    console.log(endChunkX);
-    console.log(endChunkY);
-
-
 
 
     for(let x = startingChunkX; x < endChunkX; x++){ //column
-        console.log("x");
-        for(let y = startingChunkY; y < endChunkY; y++){ //row
-            console.log("y");
 
-            drawChunk(startingChunkX, startingChunkY);
+        for(let y = startingChunkY; y < endChunkY; y++){ //row
+
+            drawChunk(x, y);
 
         }
     }
