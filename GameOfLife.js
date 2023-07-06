@@ -40,7 +40,12 @@ let tileWidth = 25;
 let canvasWidth = tileWidth * columns;
 let canvasHeight = tileWidth * rows;
 
+let offset = [0,0];
+
+
 let chunkSize = 25;
+
+let middleMouseDown = false;
 
 ctx.canvas.width = canvasWidth;
 ctx.canvas.height = canvasHeight;
@@ -70,6 +75,7 @@ shadowctx7.canvas.height = canvasHeight;
 shadowctx8.canvas.width = canvasWidth;
 shadowctx8.canvas.height = canvasHeight;
 
+
 generateTiles();
 drawTiles();
 
@@ -83,19 +89,26 @@ function generateTiles(){
         }
 
         tileMatrix.push(column);
+
     }
+
+    // console.log(tileMatrix);
 }
 
 function addChunk(chunkX, chunkY){
 
     //console.log("add chunk " + chunkX + " " + chunkY);
 
+    // console.log(tileMatrix);
+    // console.log(tileMatrix[chunkX * 25]);
+
+
     if(tileMatrix[chunkX * 25] === undefined){//columns
 
         addColumnsToChunk(chunkX, chunkY);
         console.table(chunkMatrix);
 
-    }else if(tileMatrix[chunkY * 25] === undefined){
+    }else if(tileMatrix[chunkX * 25][chunkY * 25] === undefined){
 
         addRowsToChunk(chunkX, chunkY);
         console.table(chunkMatrix);
@@ -108,7 +121,7 @@ function addChunk(chunkX, chunkY){
 
 function addRowsToChunk(chunkX, chunkY){
 
-    console.log("No rows")
+    // console.log("No rows")
     //update existing array to add tiles
 
     chunkMatrix[chunkX].splice(chunkY, 0, 1);
@@ -124,10 +137,9 @@ function addRowsToChunk(chunkX, chunkY){
 
 function addColumnsToChunk(chunkX, chunkY){
 
-    
     chunkMatrix.splice(chunkX, 0, [1]);
 
-        console.log("No columns")
+        // console.log("No columns")
         //create array to add tiles
 
         for(let x = 0; x < 25; x++){
@@ -135,7 +147,7 @@ function addColumnsToChunk(chunkX, chunkY){
             let column = [];
 
             for(let y = 0; y < 25; y++){
-                column.splice(chunkX * 25 + y, 0,false);
+                column.splice(chunkX * 25 + y, 0, false);
             } 
 
             tileMatrix.splice(chunkX * 25 + x, 0, column);
@@ -149,50 +161,34 @@ function addColumnsToChunk(chunkX, chunkY){
 
 }
 
-function drawTiles(){
 
 
-    offset = [0,0];
+function checkIfChunksNeedAdding(visibleChunksX, visibleChunksY){
 
-    numberOfVisibleChunksX = Math.ceil(ctx.canvas.width / (tileWidth * chunkSize));
-    numberOfVisibleChunksY = Math.ceil(ctx.canvas.height / (tileWidth * chunkSize));
+    console.log(visibleChunksX);
+    console.log(visibleChunksY);
 
-    console.log(numberOfVisibleChunksX);
-    console.log(numberOfVisibleChunksY);
-
-    for(let x = 0; x < numberOfVisibleChunksX; x++){
-        for(let y = 0; y < numberOfVisibleChunksY; y++){
+    for(let x = 0; x < visibleChunksX; x++){
+        for(let y = 0; y < visibleChunksY; y++){
             if(chunkMatrix[x] === undefined || chunkMatrix[x][y] === undefined){
-                
-                //add new chunk
+            
                 console.log( x + " " + y);
-
                 addChunk(x,y);
 
-
             }
-            // else if(chunkMatrix[x][y] === undefined){
-            //     console.log("Y chunk " + x + " " + y + " not created");
-            // }
         }
-        
     }
 
-    //clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    shadowctx1.clearRect(0, 0, canvas.width, canvas.height);
-    shadowctx2.clearRect(0, 0, canvas.width, canvas.height);
-    shadowctx3.clearRect(0, 0, canvas.width, canvas.height);
-    shadowctx4.clearRect(0, 0, canvas.width, canvas.height);
-    shadowctx5.clearRect(0, 0, canvas.width, canvas.height);
-    shadowctx6.clearRect(0, 0, canvas.width, canvas.height);
-    shadowctx7.clearRect(0, 0, canvas.width, canvas.height);
-    shadowctx8.clearRect(0, 0, canvas.width, canvas.height);
+}
 
+function drawChunk(chunkX, chunkY){
 
-    for(let x = 0; x < tileMatrix.length; x++){ //column
-        for(let y = 0; y < tileMatrix[0].length; y++){ //row
+    const startingTileX = chunkX * 25;
+    const startingTileY = chunkY * 25;
 
+    for(let x = startingTileX; x < startingTileX + chunkSize; x++){ //column
+        for(let y = startingTileY; y < startingTileY + chunkSize; y++){ //row
+    
             ctx.beginPath();
 
             if(tileMatrix[x][y]){
@@ -210,36 +206,137 @@ function drawTiles(){
     }
 }
 
+
+
+function drawTiles(){
+
+    console.log("draw tiles");
+
+    // offset = [100,100];
+
+    //get visible chunk coords
+
+    //current tiles in height in window.
+
+    //how many chunks is in that many tiles
+
+    let visibleChunksX = Math.ceil(ctx.canvas.width / (tileWidth * chunkSize));
+    let visibleChunksY = Math.ceil(ctx.canvas.height / (tileWidth * chunkSize));
+
+    //checkIfChunksNeedAdding(visibleChunksX, visibleChunksY);
+
+    //which chunks need loading
+
+    let startingChunkX = 0;
+    let startingChunkY = 0;
+
+
+
+    if(offset[0] != 0){
+        startingChunkX = 1 / (Math.ceil((offset[0] / tileWidth) / chunkSize));
+    }
+
+    if(offset[1] != 0){
+        startingChunkY = 1 / (Math.ceil((offset[1] / tileWidth) / chunkSize));
+    }
+
+
+
+
+
+    //clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    shadowctx1.clearRect(0, 0, canvas.width, canvas.height);
+    shadowctx2.clearRect(0, 0, canvas.width, canvas.height);
+    shadowctx3.clearRect(0, 0, canvas.width, canvas.height);
+    shadowctx4.clearRect(0, 0, canvas.width, canvas.height);
+    shadowctx5.clearRect(0, 0, canvas.width, canvas.height);
+    shadowctx6.clearRect(0, 0, canvas.width, canvas.height);
+    shadowctx7.clearRect(0, 0, canvas.width, canvas.height);
+    shadowctx8.clearRect(0, 0, canvas.width, canvas.height);
+
+
+
+    //load chunks
+    console.log(visibleChunksX);
+    console.log(visibleChunksY);
+
+    console.log(startingChunkX);
+    console.log(startingChunkY);
+
+
+    endChunkX = visibleChunksX + startingChunkX;
+    endChunkY = visibleChunksY + startingChunkY;
+
+    console.log(endChunkX);
+    console.log(endChunkY);
+
+
+
+
+    for(let x = startingChunkX; x < endChunkX; x++){ //column
+        console.log("x");
+        for(let y = startingChunkY; y < endChunkY; y++){ //row
+            console.log("y");
+
+            drawChunk(startingChunkX, startingChunkY);
+
+        }
+    }
+
+
+    // for(let x = 0; x < tileMatrix.length; x++){ //column
+    //     for(let y = 0; y < tileMatrix[0].length; y++){ //row
+
+    //         ctx.beginPath();
+
+    //         if(tileMatrix[x][y]){
+    //             ctx.fillStyle = "white";
+    //             drawShadow(x, y, "white");
+    //         }else{
+    //             ctx.fillStyle = "darkblue";
+    //             drawShadow(x, y, "black");
+    //         }
+            
+    //         ctx.fillRect(tileWidth * x, tileWidth * y, tileWidth, tileWidth);
+    //         ctx.stroke();
+
+    //     }
+    // }
+}
+
 function drawTile(x, y){
 
-    //is there space to add tiles?
 
-    //clear previous tile
-    ctx.clearRect(x * tileWidth, y * tileWidth, tileWidth, tileWidth);
-    ctx.beginPath();
+    if(!(tileMatrix[x] === undefined) && !(tileMatrix[x][y] === undefined)){ // to stop drawing in the y direction when there is no tile
 
-    try{
+        //clear previous tile
+        ctx.clearRect(x * tileWidth, y * tileWidth, tileWidth, tileWidth);
+        ctx.beginPath();
+
         if(!tileMatrix[x][y]){
+
             tileMatrix[x][y] = true;
             ctx.fillStyle = "white";
-            //draw shadow
 
-            drawShadow(x, y, "white"); 
+            //draw shadow
+            drawShadow(x, y, "white");
         
         }else{
 
             tileMatrix[x][y] = false;
             ctx.fillStyle = "darkblue";
-            drawShadow(x, y, "black"); 
+            drawShadow(x, y, "black");
 
         }
 
         ctx.stroke();
         ctx.fillRect(tileWidth * x, tileWidth * y, tileWidth, tileWidth);
-    }catch(e){
-        
+
+    }else{
+        //console.log(x + " " + y + " out of bounds");
     }
-    
+
 
 }
 
@@ -303,6 +400,15 @@ addEventListener("mousemove", (e) => {
         calculateHoveredTile(e.clientX, e.clientY);
     }
     
+    if(middleMouseDown){
+        initialX = e.clientX;
+        initialY = e.clientY;
+
+
+        console.log(e.clientX);
+        console.log(e.clientY);
+    }
+    
 });
 
 shadowCanvas8.addEventListener("wheel", (e) => {
@@ -325,6 +431,24 @@ shadowCanvas8.addEventListener("wheel", (e) => {
 
 });
 
+shadowCanvas8.addEventListener("mousedown", (e) => {
+
+    if(e.button === 1){
+        middleMouseDown = true;
+        console.log("middle mouse down");
+    }
+
+});
+
+shadowCanvas8.addEventListener("mouseup", (e) => {
+    
+    if(e.button === 1){
+        middleMouseDown = false;
+        console.log("middle mouse up");
+    }
+
+});
+
 function calculateHoveredTile(pixelX, pixelY){
 
     x = Math.floor(pixelX / tileWidth);    
@@ -335,7 +459,7 @@ function calculateHoveredTile(pixelX, pixelY){
 
         // if(!tileMatrix[x][y]){
            
-            drawTile(x,y);
+        drawTile(x,y);
             //tileMatrix[x][y] = !tileMatrix[x][y];
 
         // }
