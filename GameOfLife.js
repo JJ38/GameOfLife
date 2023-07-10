@@ -41,11 +41,14 @@ let canvasWidth = tileWidth * columns;
 let canvasHeight = tileWidth * rows;
 
 let offset = [0,0];
+let initialOffset = [0,0];
 
 
 let chunkSize = 25;
 
 let middleMouseDown = false;
+let initialX = 0;
+let initialY = 0;
 
 ctx.canvas.width = canvasWidth;
 ctx.canvas.height = canvasHeight;
@@ -76,23 +79,75 @@ shadowctx8.canvas.width = canvasWidth;
 shadowctx8.canvas.height = canvasHeight;
 
 
-generateTiles();
-drawTiles();
+// generateTiles();
 
-function generateTiles(){
 
-    for(let x = 0; x < columns; x++){ //column
+
+class Node {
+
+    constructor()
+    {
+        this.matrix = generateMatrix();
+        this.next = null;
+        this.prev = null;
+        this.up = null;
+        this.down = null;
+
+    }
+}
+
+
+const originNode = new Node();
+
+console.table(originNode.matrix);
+
+
+draw();
+
+
+
+function generateMatrix(){
+
+    matrix = []
+
+    for(let y = 0; y < columns; y++){
         let column = [];
 
-        for(let y = 0; y < rows; y++){ //row
+        for(let x = 0; x < rows; x++){
             column.push(false);
         }
 
-        tileMatrix.push(column);
+        matrix.push(column);
 
     }
 
-    // console.log(tileMatrix);
+    return matrix;
+
+}
+
+function draw(){
+
+
+    //clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    shadowctx1.clearRect(0, 0, canvas.width, canvas.height);
+    shadowctx2.clearRect(0, 0, canvas.width, canvas.height);
+    shadowctx3.clearRect(0, 0, canvas.width, canvas.height);
+    shadowctx4.clearRect(0, 0, canvas.width, canvas.height);
+    shadowctx5.clearRect(0, 0, canvas.width, canvas.height);
+    shadowctx6.clearRect(0, 0, canvas.width, canvas.height);
+    shadowctx7.clearRect(0, 0, canvas.width, canvas.height);
+    shadowctx8.clearRect(0, 0, canvas.width, canvas.height);
+
+    //calculate visible chunks
+
+    visibleChunks = [originNode];
+
+    //draw chunks
+    
+    drawChunk(originNode);
+
+
 }
 
 function addChunk(chunkX, chunkY){
@@ -161,8 +216,6 @@ function addColumnsToChunk(chunkX, chunkY){
 
 }
 
-
-
 function checkIfChunksNeedAdding(visibleChunksX, visibleChunksY){
 
 
@@ -170,7 +223,6 @@ function checkIfChunksNeedAdding(visibleChunksX, visibleChunksY){
         for(let y = 0; y < visibleChunksY; y++){
             if(chunkMatrix[x] === undefined || chunkMatrix[x][y] === undefined){
             
-                //console.log( x + " " + y);
                 addChunk(x,y);
 
             }
@@ -179,162 +231,69 @@ function checkIfChunksNeedAdding(visibleChunksX, visibleChunksY){
 
 }
 
-function drawChunk(chunkX, chunkY){
+function drawChunk(node){
 
-    const startingTileX = chunkX * chunkSize;
-    const startingTileY = chunkY * chunkSize;
-
-    for(let x = startingTileX; x < startingTileX + chunkSize; x++){ //column
-        for(let y = startingTileY; y < startingTileY + chunkSize; y++){ //row
+    for(let x = 0; x < chunkSize; x++){
+        for(let y = 0; y < chunkSize; y++){
     
             ctx.beginPath();
 
-            if(tileMatrix[x][y]){
-
+            if(node.matrix[x][y]){
                 ctx.fillStyle = "white";
-                drawShadow(x, y, "white");
+                drawShadow(x, y, offset[0], offset[1], "white");
             }else{
                 ctx.fillStyle = "darkblue";
-                drawShadow(x, y, "black");
+                drawShadow(x, y, offset[0], offset[1], "black");
             }
 
             ctx.stroke();
-            ctx.fillRect(tileWidth * x, tileWidth * y, tileWidth, tileWidth);
-            
-
-        }
-    }
-}
-
-
-
-function drawTiles(){
-
-    console.log("draw tiles");
-    //console.log(tileMatrix);
-
-    // offset = [100,100];
-
-    //get visible chunk coords
-
-    //current tiles in height in window.
-
-    //how many chunks is in that many tiles
-
-    let visibleChunksX = Math.ceil(ctx.canvas.width / (tileWidth * chunkSize));
-    let visibleChunksY = Math.ceil(ctx.canvas.height / (tileWidth * chunkSize));
-
-    checkIfChunksNeedAdding(visibleChunksX, visibleChunksY);
-
-    //which chunks need loading
-
-    let startingChunkX = 0;
-    let startingChunkY = 0;
-
-
-
-    if(offset[0] != 0){
-        startingChunkX = 1 / (Math.ceil((offset[0] / tileWidth) / chunkSize));
-        console.log(startingChunkX);
-    }
-
-    if(offset[1] != 0){
-        startingChunkY = 1 / (Math.ceil((offset[1] / tileWidth) / chunkSize));
-        console.log(startingChunkY);
-
-    }
-
-
-
-
-
-    //clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    shadowctx1.clearRect(0, 0, canvas.width, canvas.height);
-    shadowctx2.clearRect(0, 0, canvas.width, canvas.height);
-    shadowctx3.clearRect(0, 0, canvas.width, canvas.height);
-    shadowctx4.clearRect(0, 0, canvas.width, canvas.height);
-    shadowctx5.clearRect(0, 0, canvas.width, canvas.height);
-    shadowctx6.clearRect(0, 0, canvas.width, canvas.height);
-    shadowctx7.clearRect(0, 0, canvas.width, canvas.height);
-    shadowctx8.clearRect(0, 0, canvas.width, canvas.height);
-
-
-
-    //load chunks
-
-    endChunkX = visibleChunksX + startingChunkX;
-    endChunkY = visibleChunksY + startingChunkY;
-
-
-
-    for(let x = startingChunkX; x < endChunkX; x++){ //column
-
-        for(let y = startingChunkY; y < endChunkY; y++){ //row
-
-            drawChunk(x, y);
-
-        }
-    }
-
-
-    // for(let x = 0; x < tileMatrix.length; x++){ //column
-    //     for(let y = 0; y < tileMatrix[0].length; y++){ //row
-
-    //         ctx.beginPath();
-
-    //         if(tileMatrix[x][y]){
-    //             ctx.fillStyle = "white";
-    //             drawShadow(x, y, "white");
-    //         }else{
-    //             ctx.fillStyle = "darkblue";
-    //             drawShadow(x, y, "black");
-    //         }
-            
-    //         ctx.fillRect(tileWidth * x, tileWidth * y, tileWidth, tileWidth);
-    //         ctx.stroke();
-
-    //     }
-    // }
-}
-
-function drawTile(x, y){
-
-
-    if(!(tileMatrix[x] === undefined) && !(tileMatrix[x][y] === undefined)){ // to stop drawing in the y direction when there is no tile
-
-        //clear previous tile
-        ctx.clearRect(x * tileWidth, y * tileWidth, tileWidth, tileWidth);
-        ctx.beginPath();
-
-        if(!tileMatrix[x][y]){
-
-            tileMatrix[x][y] = true;
-            ctx.fillStyle = "white";
-
-            //draw shadow
-            drawShadow(x, y, "white");
+            ctx.fillRect(offset[0] + (tileWidth * x), offset[1] + (tileWidth * y), tileWidth, tileWidth);  //offset x + (tilewidth * position x) , offset y + (tilewidth * position y)
         
-        }else{
-
-            tileMatrix[x][y] = false;
-            ctx.fillStyle = "darkblue";
-            drawShadow(x, y, "black");
-
         }
+    }
+}
 
-        ctx.stroke();
-        ctx.fillRect(tileWidth * x, tileWidth * y, tileWidth, tileWidth);
+function drawTile(x, y, matrix){
 
-    }else{
-        //console.log(x + " " + y + " out of bounds");
+    console.log(matrix);
+
+    //clear previous tile
+    ctx.clearRect(offset[0] + (x * tileWidth), offset[1] + (y * tileWidth), tileWidth, tileWidth);
+    ctx.beginPath();
+
+    if(matrix[x] == undefined){
+        return;
     }
 
+    if(matrix[x][y] == undefined){
+        return;
+    }
+
+    if(!matrix[x][y]){
+
+        matrix[x][y] = true;
+        ctx.fillStyle = "white";
+
+        //draw shadow
+        drawShadow(x, y, offset[0], offset[1], "white");
+    
+    }else{
+
+        matrix[x][y] = false;
+        ctx.fillStyle = "darkblue";
+        drawShadow(x, y, offset[0], offset[1], "black");
+
+    }
+
+    ctx.stroke();
+    ctx.fillRect(offset[0] + (tileWidth * x), offset[1] + (tileWidth * y), tileWidth, tileWidth);
 
 }
 
+function drawShadow(x, y, offsetX, offsetY, colour){
 
-function drawShadow(x, y, colour){
+    // offsetX = 0;
+    // offsetY = 0;
 
     blackContextMatrix = 
     [[shadowctx1, shadowctx2]
@@ -344,7 +303,6 @@ function drawShadow(x, y, colour){
     [[shadowctx5, shadowctx6]
     ,[shadowctx7, shadowctx8]];
 
-
     contextX = x % 2;
     contextY = y % 2;
 
@@ -352,25 +310,25 @@ function drawShadow(x, y, colour){
     if(colour != "white"){
         shadowctx = blackContextMatrix[contextX][contextY];
         shadowctx.shadowBlur = 1;
-        whiteContextMatrix[contextX][contextY].clearRect(x * tileWidth - (tileWidth/2), y * tileWidth - (tileWidth/2), tileWidth * 2, tileWidth * 2);
+        whiteContextMatrix[contextX][contextY].clearRect(offsetX + (x * tileWidth - (tileWidth/2)), offsetY + (y * tileWidth - (tileWidth/2)), tileWidth * 2, tileWidth * 2);
     }else{
         shadowctx = whiteContextMatrix[contextX][contextY];
         shadowctx.shadowBlur = 8;
-        blackContextMatrix[contextX][contextY].clearRect(x * tileWidth - (tileWidth/2), y * tileWidth - (tileWidth/2), tileWidth * 2, tileWidth * 2);
+        blackContextMatrix[contextX][contextY].clearRect(offsetX + (x * tileWidth - (tileWidth/2)), offsetY + (y * tileWidth - (tileWidth/2)), tileWidth * 2, tileWidth * 2);
     }
 
     //clear previous shadow
-    shadowctx.clearRect(x * tileWidth - (tileWidth/2), y * tileWidth - (tileWidth/2), tileWidth * 2, tileWidth * 2);
+    shadowctx.clearRect(offsetX + (x * tileWidth - (tileWidth/2)), offsetY + (y * tileWidth - (tileWidth/2)), tileWidth * 2, tileWidth * 2);
 
     shadowctx.beginPath();
     shadowctx.fillStyle = "rgba(255, 255, 255, 1)";
     shadowctx.shadowColor = colour;
 
     shadowctx.stroke();
-    shadowctx.fillRect(tileWidth * x, tileWidth * y, tileWidth, tileWidth);
+    shadowctx.fillRect(offsetX + (tileWidth * x), offsetY + (tileWidth * y), tileWidth, tileWidth);
 
     // clear rect fill to only show shadow
-    shadowctx.clearRect(x * tileWidth, y * tileWidth, tileWidth, tileWidth);
+    shadowctx.clearRect(offsetX + (x * tileWidth), offsetY + (y * tileWidth), tileWidth, tileWidth);
    
 
 }
@@ -389,37 +347,42 @@ shadowCanvas8.addEventListener('mouseout', (e) => {
 
 addEventListener("mousemove", (e) => {
 
-    if(insideCanvas){
+
+    if(middleMouseDown){
+        
+        differenceX = initialX - e.clientX;
+        differenceY = initialY - e.clientY;
+
+        offset[0] = initialOffset[0] + differenceX * -1;
+        offset[1] = initialOffset[1] + differenceY * -1;
+
+        // console.log(offset[0]);
+        // console.log(offset[1]);
+
+        draw();
+    }else if(insideCanvas){
         calculateHoveredTile(e.clientX, e.clientY);
     }
     
-    if(middleMouseDown){
-        initialX = e.clientX;
-        initialY = e.clientY;
-
-
-        console.log(e.clientX);
-        console.log(e.clientY);
-    }
+   
     
 });
 
 shadowCanvas8.addEventListener("wheel", (e) => {
     e.preventDefault();
 
-    console.log(e.deltaY);
     if(e.deltaY < 0){
-        console.log("scroll up");
+
         tileWidth += 1;         
-        drawTiles();
+        draw();
 
     }else{
-        console.log("scroll down");
+
         if(tileWidth > 4){
             tileWidth -= 1; 
         }
         
-        drawTiles();
+        draw();
     }
 
 });
@@ -427,6 +390,8 @@ shadowCanvas8.addEventListener("wheel", (e) => {
 shadowCanvas8.addEventListener("mousedown", (e) => {
 
     if(e.button === 1){
+        initialX = e.clientX;
+        initialY = e.clientY;
         middleMouseDown = true;
         console.log("middle mouse down");
     }
@@ -437,6 +402,9 @@ shadowCanvas8.addEventListener("mouseup", (e) => {
     
     if(e.button === 1){
         middleMouseDown = false;
+        initialOffset[0] = offset[0];
+        initialOffset[1] = offset[1];
+
         console.log("middle mouse up");
     }
 
@@ -444,56 +412,22 @@ shadowCanvas8.addEventListener("mouseup", (e) => {
 
 function calculateHoveredTile(pixelX, pixelY){
 
-    x = Math.floor(pixelX / tileWidth);    
-    y = Math.floor(pixelY / tileWidth);
-    
+    x = Math.floor((pixelX + (offset[0] * -1)) / tileWidth);    
+    y = Math.floor((pixelY + (offset[1] * -1)) / tileWidth);
+
+
+    node = originNode;
+
 
     if(previousXTile != x || previousYTile != y){
 
-        // if(!tileMatrix[x][y]){
+        matrix = node.matrix;
            
-        drawTile(x,y);
-            //tileMatrix[x][y] = !tileMatrix[x][y];
-
-        // }
-
+        drawTile(x, y, matrix);
+          
         previousXTile = x;
         previousYTile = y;
         
     }
 
 }
-
-
-
-// container.addEventListener('pointerup', (e) => {
-//     pointerDown = false;
-// });
-
-// container.addEventListener('pointerdown', (e) => {
-    
-//     initialAbsoluteLeft = origin.getBoundingClientRect().left - container.getBoundingClientRect().left; 
-//     initialAbsoluteTop = origin.getBoundingClientRect().top; 
-
-//     console.log(initialAbsoluteLeft);
-//     console.log(initialAbsoluteTop);
-    
-//     initialXPos = e.clientX;
-//     initialYPos = e.clientY;
-//     pointerDown = true;
-
-// });
-
-// container.addEventListener('pointermove', (e) => {
-    
-//     if(pointerDown){
-    
-//         let differenceX = e.clientX - initialXPos;   
-//         let differenceY = e.clientY - initialYPos;
-
-//         origin.style.left = (initialAbsoluteLeft + differenceX) +'px';
-//         origin.style.top = (initialAbsoluteTop + differenceY)  + 'px';
-
-//     }
-    
-// });
